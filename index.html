@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>업체 정보 검색</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f5fbf">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="업체검색">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f3f5f8; --card:#ffffff; --text:#1c2430; --sub:#66707d; --line:#dfe4ea;
+  --accent:#1f5fbf; --accent-bg:#e6effc; --stop:#b3261e; --stop-bg:#fde8e6;
+  --add-bg:#e3f0ff; --chk-bg:#fff1c7; --chk:#8a5a00; --mute-bg:#eef0f3;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#12161c; --card:#1c222b; --text:#e8ecf1; --sub:#9aa5b3; --line:#2e3742;
+    --accent:#7fb0ff; --accent-bg:#1d2f4d; --stop:#ff8a80; --stop-bg:#4a211e;
+    --add-bg:#1d2f4d; --chk-bg:#4a3a10; --chk:#ffd479; --mute-bg:#262d37;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.wrap{max-width:760px;margin:0 auto}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 14px 8px;
+  padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.searchrow{display:flex;gap:8px}
+#q,#pw,#nm{flex:1;min-width:0;font-size:18px;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;
+  background:var(--card);color:var(--text);outline:none;-webkit-appearance:none}
+#q:focus,#pw:focus,#nm:focus{border-color:var(--accent)}
+#nm{flex:1 1 100%}
+#nm[hidden],#pw[hidden]{display:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+@media (prefers-color-scheme: dark){.btn.primary{color:#0d1420}}
+.filters{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:14px;color:var(--sub);align-items:center}
+.filters label{display:flex;align-items:center;gap:5px}
+.filters input{width:18px;height:18px}
+#count{margin-left:auto;font-variant-numeric:tabular-nums}
+main{padding:10px 14px 40px}
+.hint{color:var(--sub);font-size:14px;margin:6px 2px 12px}
+.item{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.item .nm{font-weight:700;font-size:17px;overflow-wrap:anywhere}
+.item .sub{color:var(--sub);font-size:14px;margin-top:2px;overflow-wrap:anywhere}
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:6px;
+  background:var(--accent-bg);color:var(--accent);vertical-align:2px;white-space:nowrap}
+.badge.stop{background:var(--stop-bg);color:var(--stop)}
+.badge.mute{background:var(--mute-bg);color:var(--sub)}
+#more{display:block;margin:12px auto}
+#detail,#login{display:none}
+body.detail #list,body.detail header{display:none}
+body.detail #detail{display:block}
+body.locked #list,body.locked header,body.locked #detail{display:none}
+body.locked #login{display:block}
+#login .box{max-width:420px;margin:0 auto;padding:calc(48px + env(safe-area-inset-top)) 20px 20px}
+#login h1{margin:0 0 6px}
+#login p{color:var(--sub);margin:0 0 18px;font-size:15px}
+#login form{display:flex;flex-wrap:wrap;gap:8px}
+#loginMsg{color:var(--stop);margin-top:12px;min-height:1.5em;font-size:15px}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 14px;
+  padding-top:calc(8px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.back{border:0;background:none;color:var(--accent);padding:6px 0;font-size:16px}
+h1{font-size:21px;line-height:1.3;margin:12px 0 10px;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.kv{display:flex;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}
+.kv:first-child{border-top:0}
+.kv .k{flex:0 0 88px;color:var(--sub);font-size:14px;padding-top:1px}
+.kv .v{flex:1;min-width:0;overflow-wrap:anywhere}
+a{color:var(--accent);text-decoration:none}
+h2{font-size:16px;margin:18px 2px 8px}
+h2 small{color:var(--sub);font-weight:400}
+.mach{padding:11px 14px;border-top:1px solid var(--line)}
+.mach:first-child{border-top:0}
+.mach.add{background:var(--add-bg)}
+.mach.chk{background:var(--chk-bg)}
+.mach.hit{box-shadow:inset 4px 0 0 var(--accent)}
+.mach .hd{font-weight:700;overflow-wrap:anywhere}
+.mach .sn{font-family:ui-monospace,Consolas,monospace;font-weight:400;margin-left:6px}
+.mach .ln{font-size:14px;margin-top:3px;overflow-wrap:anywhere;white-space:pre-wrap}
+.mach .jk{color:var(--sub)}
+.mach .flow{color:var(--accent);font-weight:700}
+.sortrow{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:0 2px 8px;font-size:13px;color:var(--sub)}
+.sortrow select{font:inherit;font-size:14px;color:var(--text);background:var(--card);border:1.5px solid var(--line);
+  border-radius:8px;padding:5px 8px}
+.sortrow .money{display:flex;align-items:center;gap:5px;margin-right:auto;font-size:14px}
+.sortrow .money input{width:18px;height:18px}
+mark{background:#fde68a;color:inherit;border-radius:3px;padding:0 1px}
+@media (prefers-color-scheme: dark){mark{background:#8a6a12}}
+.mach.gone .hd,.mach.gone .flow{color:var(--sub)}
+.mach .fl{color:var(--chk);font-weight:700}
+.st{float:right;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:8px;
+  background:var(--mute-bg);color:var(--sub)}
+.notes{padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.foot{color:var(--sub);font-size:13px;text-align:center;margin-top:24px}
+.foot button{border:0;background:none;color:var(--accent);font-size:13px;padding:6px 8px}
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:rgba(30,34,40,.92);color:#fff;padding:10px 18px;border-radius:22px;font-size:15px;
+  opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;white-space:nowrap}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="searchrow">
+    <input id="q" type="search" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off"
+           spellcheck="false" placeholder="업체명 · 주소 · 사업자번호 · 기종 · 기번" aria-label="검색어">
+    <button class="btn" id="clear" type="button">지우기</button>
+  </div>
+  <div class="filters">
+    <label><input type="checkbox" id="fStop" checked> 거래중단·타부서</label>
+    <label><input type="checkbox" id="fEtc" checked> 매입처·양식 외</label>
+    <span id="count"></span>
+  </div>
+</div></header>
+<main class="wrap" id="list">
+  <p class="hint" id="hint"></p>
+  <div id="results"></div>
+  <button class="btn" id="more" type="button" hidden>더 보기</button>
+  <p class="foot"><span id="foot"></span><br><span id="sync"></span>
+    <span id="tools" hidden><br><button id="reload" type="button">지금 새로 받기</button>
+    <button id="install" type="button" hidden>앱으로 설치</button>
+    <button id="lock" type="button">비밀번호 다시 입력</button></span></p>
+  <p class="foot" id="iosTip" hidden>아이폰: 아래쪽 공유 버튼(□↑) → “홈 화면에 추가”를 누르면 앱처럼 쓸 수 있습니다.</p>
+</main>
+<section id="detail">
+  <div class="top"><div class="wrap"><button class="back" id="back" type="button">‹ 검색 결과로</button></div></div>
+  <div class="wrap" style="padding:0 14px 48px" id="dbody"></div>
+</section>
+<section id="login"><div class="box">
+  <h1>업체 정보 검색</h1>
+  <p id="loginHelp">회사에서 안내받은 비밀번호를 입력하세요. 한 번만 입력하면 이 기기에 기억됩니다.</p>
+  <form id="loginForm">
+    <input id="nm" type="text" autocomplete="name" placeholder="사용자 이름" aria-label="사용자 이름" hidden>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호">
+    <button class="btn primary" type="submit">확인</button>
+  </form>
+  <div id="loginMsg" role="alert"></div>
+</div></section>
+<div id="toast" role="status"></div>
+<script>
+const EMBED = /*__DATA__*/null;
+const SHELL = "81e45c86f5d6";  // 이 화면의 버전 (올릴 때 채워진다)
+const LOG = {"url": "https://docs.google.com/forms/d/e/1FAIpQLSfMStE-5e1e4yCq_37KX9u2L5MtB_OePE63n6YSVGSRJLi1wg/formResponse", "entry": "entry.1798926446", "pub": "BOcWc5fFsom2OcMS6OLypEOot6mNGvA/rymyR72E99RATBLMb3o6TTUd6jfTnL9mYT3UXl6BDgZrcZg+2RW70UE="};   // 사용 기록을 보낼 곳 {url, entry, pub}. 연결되어 있지 않으면 null (기록하지 않고 이름도 묻지 않음)
+let DATA = null, LIST = [];
+const CAT_ORDER = {"거래처":0,"매입처":1,"거래중단·타부서":2,"족보 전용":3,"장부 전용":4,"양식 외":5};
+const FIELD = ["업체명","사업자번호","장비","주소","전화/FAX","대표자","기타 내용"];
+const CORP = /\(\s*[주유합재사株]\s*\)|주식회사|유한회사|합자회사|재단법인|사단법인|株式会社/g;
+const PAGE = 60;
+const $ = id => document.getElementById(id);
+let results = [], shown = 0, tokens = [];
+
+function norm(s){
+  return s.normalize("NFKC").replace(CORP, " ").toLowerCase().replace(/[^0-9a-z가-힣一-鿿ぁ-ヿ]/g, "");
+}
+function esc(s){
+  return String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+// 전화번호는 누르면 전화, 메일 주소는 누르면 메일 작성
+function linkify(s){
+  return esc(s).replace(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}|0\d{1,2}[-.\s)]{1,2}\d{3,4}[-.\s]\d{4}|1[5-9]\d{2}-\d{4}/g,
+    m => m.includes("@") ? `<a href="mailto:${m}">${m}</a>` : `<a href="tel:${m.replace(/[^\d]/g, "")}">${m}</a>`);
+}
+function badge(cat){
+  const cls = cat === "거래중단·타부서" ? " stop" : (cat === "양식 외" || cat === "족보 전용" || cat === "장부 전용") ? " mute" : "";
+  return `<span class="badge${cls}">${esc(cat)}</span>`;
+}
+
+function search(){
+  const cats = new Set(["거래처", "족보 전용", "장부 전용"]);
+  if ($("fStop").checked) cats.add("거래중단·타부서");
+  if ($("fEtc").checked) { cats.add("매입처"); cats.add("양식 외"); }
+  tokens = $("q").value.normalize("NFKC").split(/\s+/).map(norm).filter(Boolean);
+  const out = [];
+  LIST.forEach((c, idx) => {
+    if (!cats.has(c.c)) return;
+    if (!tokens.length) { out.push([0, idx, ""]); return; }
+    let score = 0; const hits = [];
+    for (const t of tokens) {
+      let found = false;
+      // 네 자리 이하 숫자(예: 3058)는 기종·전화 끝자리를 찾는 것으로 보고, 사업자번호(1)·기타 내용(6)에서는 찾지 않는다
+      const shortNumber = /^\d{1,4}$/.test(t);
+      for (let f = 0; f < 7; f++) {
+        if (shortNumber && (f === 1 || f === 6)) continue;
+        if (!c.s[f].includes(t)) continue;
+        if (f === 0) score += c.k === t ? 0 : c.k.startsWith(t) ? 1 : 2;
+        else { score += f + 2; if (!hits.includes(FIELD[f])) hits.push(FIELD[f]); }
+        found = true; break;
+      }
+      if (!found) return;
+    }
+    out.push([score, idx, hits.join(", ")]);
+  });
+  out.sort((a, b) => a[0] - b[0] || CAT_ORDER[LIST[a[1]].c] - CAT_ORDER[LIST[b[1]].c] || a[1] - b[1]);
+  results = out; shown = 0;
+  $("results").innerHTML = "";
+  $("count").textContent = (tokens.length ? "" : "전체 ") + out.length.toLocaleString() + "건";
+  $("hint").textContent = tokens.length
+    ? (out.length ? "" : "검색 결과가 없습니다. 띄어 쓴 단어가 모두 들어 있는 업체만 나옵니다.")
+    : "업체명·주소·사업자번호·전화·대표자·기종·기계번호(기번) 중 아무거나 입력하세요. 띄어 쓰면 모두 포함된 업체만 나옵니다. 예) 경산 C3000";
+  renderMore();
+  // 사용 기록: 글자를 치는 중간 단계는 남기지 않고, 잠시 멈춘 검색어만 남긴다
+  clearTimeout(logTimer);
+  const q = $("q").value.trim(), n = out.length;
+  if (q) logTimer = setTimeout(() => logQuery(q, n), 1500);
+}
+function logQuery(q, n){
+  clearTimeout(logTimer);
+  if (q && q !== loggedQuery) { loggedQuery = q; logEvent("검색", `결과 ${n}건`, q); }
+}
+function renderMore(){
+  const html = [];
+  for (const [, idx, hit] of results.slice(shown, shown + PAGE)) {
+    const c = LIST[idx];
+    const info = Object.fromEntries(c.i);
+    const sub = [hit ? "일치: " + hit : "", info["주소"] || "", info["대표자"] ? "대표 " + info["대표자"] : ""]
+      .filter(Boolean).join(" · ");
+    html.push(`<button class="item" type="button" data-i="${idx}"><div class="nm">${esc(c.n)}${badge(c.c)}</div>`
+      + (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</button>`);
+  }
+  $("results").insertAdjacentHTML("beforeend", html.join(""));
+  shown = Math.min(results.length, shown + PAGE);
+  $("more").hidden = shown >= results.length;
+}
+
+function infoText(c){ return c.t.split("\n\n▶")[0]; }
+// 거래 금액은 기본으로 숨긴다. 켜면 장비 줄과 '전체 복사' 글에 금액이 들어간다 (이 핸드폰에만 기억)
+function moneyOn(){ return localStorage.getItem("upche-money") === "1"; }
+function fullText(c){ return moneyOn() && c.tm ? c.tm : c.t; }
+
+// 검색어가 들어 있는 글자를 노랗게 칠한다 (왜 이 업체가 나왔는지 보이도록).
+// 검색과 같은 기준으로 비교하므로 띄어쓰기·하이픈이 달라도 찾는다. 돌려주는 값: 원문에서의 [시작, 끝] 목록
+function matchSpans(text, toks){
+  const chars = [], idx = [];
+  for (let i = 0; i < text.length; i++)
+    for (const c2 of text[i].normalize("NFKC")) { chars.push(c2); idx.push(i); }
+  const s = chars.join("").replace(CORP, m => " ".repeat(m.length)).toLowerCase();
+  const keep = [];
+  for (let j = 0; j < s.length && j < idx.length; j++)
+    if (/[0-9a-z가-힣一-鿿ぁ-ヿ]/.test(s[j])) keep.push([s[j], idx[j]]);
+  const flat = keep.map(k => k[0]).join("");
+  const spans = [];
+  for (const t of toks) {
+    let at = flat.indexOf(t);
+    while (at >= 0) { spans.push([keep[at][1], keep[at + t.length - 1][1] + 1]); at = flat.indexOf(t, at + t.length); }
+  }
+  spans.sort((a, b) => a[0] - b[0]);
+  const merged = [];
+  for (const sp of spans) {
+    const last = merged[merged.length - 1];
+    if (last && sp[0] <= last[1]) last[1] = Math.max(last[1], sp[1]); else merged.push(sp);
+  }
+  return merged;
+}
+function markHits(root){
+  if (!tokens.length) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    const p = node.parentElement;
+    if (!p || p.closest("button,select,label,.k,.st,.foot,h2,.badge")) continue;
+    // 사업자번호는 검색과 같은 규칙: 네 자리 이하 숫자로는 찾지 않는다
+    const toks = p.closest('[data-k="사업자등록번호"]') ? tokens.filter(t => !/^\d{1,4}$/.test(t)) : tokens;
+    const text = node.nodeValue, spans = matchSpans(text, toks);
+    if (!spans.length) continue;
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    for (const [s, e] of spans) {
+      frag.append(text.slice(pos, s));
+      const m = document.createElement("mark");
+      m.textContent = text.slice(s, e);
+      frag.append(m);
+      pos = e;
+    }
+    frag.append(text.slice(pos));
+    node.replaceWith(frag);
+  }
+}
+
+// 장비 정렬 (PC 프로그램과 같은 기준). 값이 없는 줄은 항상 뒤로 보낸다. r[13] = 설치일 또는 기번으로 본 연도
+const SORTS = ["기종순", "설치일 최신순", "설치일 오래된순", "기번순", "확인 필요 먼저", "원본 순서"];
+const ST_ORDER = {"확인 필요":0, "족보 추가":1, "기번 보완":2, "일치":3, "업체정보":4, "이전 기재":5, "거래 기록":6};
+function sortMachines(rows, mode){
+  const a = rows.slice();
+  const cmp = (x, y) => x < y ? -1 : x > y ? 1 : 0;
+  const serial = r => r[2].normalize("NFKC").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  if (mode === "기종순") a.sort((x, y) => (!x[1] - !y[1]) || cmp(norm(x[1]), norm(y[1])) || y[13] - x[13]);
+  else if (mode === "설치일 최신순") a.sort((x, y) => (!x[13] - !y[13]) || y[13] - x[13] || cmp(norm(x[1]), norm(y[1])));
+  else if (mode === "설치일 오래된순") a.sort((x, y) => (!x[13] - !y[13]) || x[13] - y[13] || cmp(norm(x[1]), norm(y[1])));
+  else if (mode === "기번순") a.sort((x, y) => (!x[2] - !y[2]) || cmp(serial(x), serial(y)));
+  else if (mode === "확인 필요 먼저") a.sort((x, y) => (ST_ORDER[x[0]] ?? 9) - (ST_ORDER[y[0]] ?? 9) || cmp(norm(x[1]), norm(y[1])));
+  return a;
+}
+function showDetail(idx, keepScroll){
+  const c = LIST[idx];
+  const h = [];
+  h.push(`<h1>${esc(c.n)}${badge(c.c)}</h1>`);
+  h.push(`<div class="actions"><button class="btn primary" type="button" data-copy="all">전체 복사</button>`
+    + `<button class="btn" type="button" data-copy="info">기본정보만 복사</button>`
+    + (navigator.share ? `<button class="btn" type="button" data-copy="share">공유</button>` : "") + `</div>`);
+  const kv = c.i.map(([k, v]) => {
+    let val = linkify(v);
+    if (k === "주소") val += ` <a href="https://map.naver.com/p/search/${encodeURIComponent(v)}" target="_blank" rel="noopener">[지도]</a>`;
+    return `<div class="kv" data-k="${esc(k)}"><div class="k">${esc(k)}</div><div class="v" data-v="${esc(v)}">${val}</div></div>`;
+  });
+  if (c.tn) kv.push(`<div class="kv"><div class="k">참고</div><div class="v">${linkify(c.tn)}</div></div>`);
+  if (c.alt.length) kv.push(`<div class="kv"><div class="k">이전 정보</div><div class="v">${c.alt.map(esc).join("<br>")}</div></div>`);
+  if (kv.length) h.push(`<div class="card">${kv.join("")}</div>`);
+
+  const machines = c.r.filter(r => r[9] === 0), contacts = c.r.filter(r => r[9] === 1);
+  if (machines.length) {
+    const add = machines.filter(r => r[0] === "족보 추가" || r[0] === "기번 보완").length;
+    const chk = machines.filter(r => r[0] === "확인 필요").length;
+    const sold = machines.filter(r => r[11]).length;
+    const note = [add && c.c !== "족보 전용" ? `족보 보완 ${add}` : "", chk ? `확인 필요 ${chk}` : "",
+                  sold ? `매각 ${sold}` : ""].filter(Boolean).join(" · ");
+    const mode = localStorage.getItem("upche-sort") || SORTS[0];
+    const money = moneyOn();
+    h.push(`<h2>설치 장비 ${machines.length}대 <small>${note}</small></h2>`
+      + `<div class="sortrow">`
+      + (machines.some(r => r[14]) ? `<label class="money"><input type="checkbox" id="money"${money ? " checked" : ""}> 금액 표시</label>` : "")
+      + `<label for="sort">정렬</label><select id="sort">`
+      + SORTS.map(s => `<option${s === mode ? " selected" : ""}>${s}</option>`).join("") + `</select></div>`
+      + `<div class="card">`);
+    for (const r of sortMachines(machines, mode)) {
+      const cls = (r[0] === "족보 추가" || r[0] === "기번 보완") ? " add" : r[0] === "확인 필요" ? " chk" : "";
+      // 기종·기번이 검색어와 맞는 줄만 표시 (족보 글에는 업체명이 들어 있어 비교에서 뺀다)
+      const hit = tokens.length && tokens.some(t => norm(r[1] + r[2]).includes(t)) ? " hit" : "";
+      const when = r[3] ? "설치 " + r[3] : (r[13] ? Math.floor(r[13] / 10000) + "년식" : "");
+      const extra = [when, r[4], r[5], r[6]].filter(Boolean).join(" · ");
+      h.push(`<div class="mach${cls}${hit}${r[11] ? " gone" : ""}"><span class="st">${esc(r[0])}</span>`
+        + `<div class="hd">${esc(r[1] || "(기종 미상)")}<span class="sn">${esc(r[2])}</span></div>`
+        + (r[10] ? `<div class="ln flow">${esc(money && r[14] ? r[14] : r[10])}</div>` : "")
+        + (r[12] ? `<div class="ln jk">흐름: ${esc(r[12])}</div>` : "")
+        + (extra ? `<div class="ln">${linkify(extra)}</div>` : "")
+        + (r[8] ? `<div class="ln fl">※ ${esc(r[8])}</div>` : "")
+        + (r[7] ? `<div class="ln jk">족보 ${esc(r[7])}</div>` : "") + `</div>`);
+    }
+    h.push(`</div>`);
+  }
+  if (contacts.length) {
+    h.push(`<h2>담당자 · 연락처</h2><div class="card">`);
+    for (const r of contacts)
+      h.push(`<div class="mach"><div class="ln" style="font-size:15px;margin:0">${linkify([r[4], r[5], r[6], r[3]].filter(Boolean).join(" · "))}</div></div>`);
+    h.push(`</div>`);
+  }
+  if (c.nt) h.push(`<h2>특기사항</h2><div class="card"><div class="notes">${linkify(c.nt)}</div></div>`);
+  h.push(`<p class="foot">${c.src ? "원본: " + esc(c.src) : "기계족보에만 있는 업체 (업체정보 파일 없음)"}<br>자료 기준 ${esc(DATA.built)}</p>`);
+  $("dbody").innerHTML = h.join("");
+  $("dbody").dataset.i = idx;
+  document.body.classList.add("detail");
+  // 업체명으로 찾았으면 맨 위부터, 기종·기번으로만 찾았을 때는 그 장비 줄로 이동
+  markHits($("dbody"));
+  if (keepScroll) return;  // 정렬만 바꾼 경우: 보던 자리 그대로
+  const q = $("q").value.trim();
+  logQuery(q, results.length);  // 무엇을 검색했는지가 먼저, 그다음에 무엇을 보았는지
+  logEvent("조회", `${c.n} [${c.c}]`, q);
+  const byName = tokens.some(t => c.s[0].includes(t));
+  const first = byName ? null : $("dbody").querySelector(".mach.hit");
+  window.scrollTo(0, 0);
+  if (first) first.scrollIntoView({block: "center"});
+}
+
+let listScroll = 0, pending = null;
+function route(){
+  const m = location.hash.match(/^#c=(\d+)$/);
+  if (m && LIST[+m[1]]) { showDetail(+m[1]); return; }
+  document.body.classList.remove("detail");
+  if (pending) { const d = pending; pending = null; setData(d); toast("자료를 최신으로 갱신했습니다"); }
+  else window.scrollTo(0, listScroll);
+}
+function setData(d){
+  DATA = d; LIST = d.list;
+  $("foot").textContent = "자료 기준 " + d.built + " · 업체 " + LIST.length.toLocaleString() + "곳";
+  lastQ = $("q").value;
+  search();
+  if (location.hash) route();
+}
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("on"), 1800);
+}
+async function copy(text, what){
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {  // http·파일로 열었을 때는 클립보드 API를 못 쓰므로 예전 방식으로
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.cssText = "position:fixed;top:0;opacity:0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand("copy"); } finally { ta.remove(); }
+  }
+  toast((what || "내용") + " 복사했습니다");
+  const c = LIST[+$("dbody").dataset.i];
+  logEvent("복사", (c ? c.n + " — " : "") + (what || "내용") + (what === "전체 정보" && moneyOn() ? " (금액 포함)" : ""),
+           $("q").value.trim());
+}
+
+// 한글 입력기는 기기마다 보내는 이벤트가 달라 여러 이벤트에 모두 반응한다
+let timer, lastQ = "";
+function onType(){
+  clearTimeout(timer);
+  timer = setTimeout(() => { if ($("q").value !== lastQ) { lastQ = $("q").value; search(); } }, 120);
+}
+for (const ev of ["input", "keyup", "change", "compositionend", "search"]) $("q").addEventListener(ev, onType);
+$("clear").addEventListener("click", () => { $("q").value = lastQ = ""; search(); $("q").focus(); });
+$("fStop").addEventListener("change", search);
+$("fEtc").addEventListener("change", search);
+$("more").addEventListener("click", renderMore);
+$("results").addEventListener("click", e => {
+  const b = e.target.closest(".item");
+  if (b) { listScroll = window.scrollY; location.hash = "c=" + b.dataset.i; }
+});
+$("back").addEventListener("click", () => history.length > 1 ? history.back() : (location.hash = ""));
+$("dbody").addEventListener("change", e => {
+  if (e.target.id === "sort") localStorage.setItem("upche-sort", e.target.value);  // 고른 정렬은 다음에도 유지
+  else if (e.target.id === "money") {
+    localStorage.setItem("upche-money", e.target.checked ? "1" : "0");
+    const c = LIST[+$("dbody").dataset.i];
+    logEvent("금액 표시", e.target.checked ? "켬" : "끔", c ? c.n : "");
+  }
+  else return;
+  const y = window.scrollY;
+  showDetail(+$("dbody").dataset.i, true);
+  window.scrollTo(0, y);
+});
+$("dbody").addEventListener("click", e => {
+  const c = LIST[+$("dbody").dataset.i];
+  const b = e.target.closest("[data-copy]");
+  if (b) {
+    if (b.dataset.copy === "all") copy(fullText(c), "전체 정보");
+    else if (b.dataset.copy === "info") copy(infoText(c), "기본정보");
+    else navigator.share({title: c.n, text: fullText(c)}).catch(() => {});
+    return;
+  }
+  if (e.target.closest("a")) return;
+  const v = e.target.closest(".v[data-v]");
+  if (v) copy(v.dataset.v, v.previousElementSibling.textContent);
+});
+window.addEventListener("hashchange", route);
+
+// ---- 웹앱: 암호화된 자료를 받아 풀고, 기기에 보관하고, 바뀌면 다시 받는다 ----
+// 파일 구조: "UPCH1"(5) | gzip 여부(1) | salt(16) | iv(12) | AES-256-GCM 암호문
+const DATA_URL = "DecompressionStream" in window ? "data.gz.bin" : "data.bin";
+const K_KEY = "upche-key", K_VER = "upche-ver";
+let lastCheck = 0, refreshing = false, installEvent = null;
+const b64enc = u8 => btoa(String.fromCharCode(...u8));
+const b64dec = s => Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
+
+async function deriveKey(password, salt){
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  return new Uint8Array(await crypto.subtle.deriveBits(
+    {name: "PBKDF2", hash: "SHA-256", salt, iterations: 600000}, base, 256));
+}
+async function decrypt(buf, rawKey){
+  const u = new Uint8Array(buf);
+  if (new TextDecoder().decode(u.subarray(0, 5)) !== "UPCH1") throw new Error("format");
+  const key = await crypto.subtle.importKey("raw", rawKey, "AES-GCM", false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({name: "AES-GCM", iv: u.subarray(22, 34)}, key, u.subarray(34));
+  const text = u[5] === 1
+    ? await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream("gzip"))).text()
+    : new TextDecoder().decode(plain);
+  return JSON.parse(text);
+}
+async function cachedData(){
+  try { const r = await (await caches.open("upche-data")).match("data"); return r ? await r.arrayBuffer() : null; }
+  catch (e) { return null; }
+}
+async function storeData(buf){
+  try { await (await caches.open("upche-data")).put("data", new Response(buf)); } catch (e) {}
+}
+async function remoteVersion(){
+  const r = await fetch("version.json?t=" + Date.now(), {cache: "no-store"});
+  if (!r.ok) throw new Error("http " + r.status);
+  return r.json();
+}
+async function fetchData(v){
+  const r = await fetch(DATA_URL + "?v=" + encodeURIComponent(v), {cache: "no-store"});
+  if (!r.ok) throw new Error("http " + r.status);
+  return r.arrayBuffer();
+}
+function lock(msg, keepKey){
+  if (!keepKey) localStorage.removeItem(K_KEY);
+  document.body.classList.remove("detail");
+  document.body.classList.add("locked");
+  $("loginMsg").textContent = msg || "";
+  // 사용 기록이 켜져 있으면 처음 한 번 이름을 받는다. 비밀번호는 이미 맞게 넣은 기기라면 다시 묻지 않는다
+  const needName = LOG && !localStorage.getItem(K_NAME);
+  const needPw = !localStorage.getItem(K_KEY);
+  $("nm").hidden = !needName;
+  $("pw").hidden = !needPw;
+  $("loginHelp").textContent = needPw
+    ? "회사에서 안내받은 비밀번호를 입력하세요. 한 번만 입력하면 이 기기에 기억됩니다."
+    : "사용자 이름을 입력해 주세요.";
+  $("pw").value = "";
+  (needName ? $("nm") : $("pw")).focus();
+}
+
+// ---- 사용 기록: 누가 무엇을 검색·조회했는지 잠가서 보낸다. 풀어 볼 수 있는 것은 관리자 PC 뿐이다 ----
+const K_NAME = "upche-name", K_LOGQ = "upche-logq";
+let flushing = false, logTimer = null, loggedQuery = "";
+function device(){
+  const ua = navigator.userAgent;
+  if (/iphone|ipad|ipod/i.test(ua)) return "아이폰";
+  const m = ua.match(/Android[^;)]*;\s*([^;)]+?)(?:\s+Build|\))/);
+  return /android/i.test(ua) ? "안드로이드" + (m ? " " + m[1] : "") : "브라우저";
+}
+function stamp(){
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+function concat(...parts){
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+async function sealLog(text){
+  const enc = new TextEncoder(), pub = b64dec(LOG.pub);
+  const peer = await crypto.subtle.importKey("raw", pub, {name: "ECDH", namedCurve: "P-256"}, false, []);
+  const eph = await crypto.subtle.generateKey({name: "ECDH", namedCurve: "P-256"}, true, ["deriveBits"]);
+  const ephPub = new Uint8Array(await crypto.subtle.exportKey("raw", eph.publicKey));
+  const shared = await crypto.subtle.deriveBits({name: "ECDH", public: peer}, eph.privateKey, 256);
+  const hk = await crypto.subtle.importKey("raw", shared, "HKDF", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    {name: "HKDF", hash: "SHA-256", salt: new Uint8Array(0), info: concat(enc.encode("upche-log-m1"), ephPub, pub)},
+    hk, {name: "AES-GCM", length: 256}, false, ["encrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name: "AES-GCM", iv}, key, enc.encode(text)));
+  return "m1:" + b64enc(concat(ephPub, iv, ct));
+}
+function logEvent(action, detail, query){
+  if (!LOG || EMBED) return;
+  const rec = {t: stamp(), ms: Date.now(), u: localStorage.getItem(K_NAME) || "(이름 없음)", pc: "핸드폰 · " + device(),
+               a: action, d: detail || "", q: query || "", v: "앱"};
+  sealLog(JSON.stringify(rec)).then(line => {
+    const queue = JSON.parse(localStorage.getItem(K_LOGQ) || "[]");
+    queue.push(line);
+    localStorage.setItem(K_LOGQ, JSON.stringify(queue.slice(-300)));  // 인터넷이 안 될 때는 모아 두었다가 보낸다
+    flushLog();
+  }).catch(() => {});
+}
+async function flushLog(){
+  if (flushing || !LOG || !navigator.onLine) return;
+  flushing = true;
+  try {
+    for (;;) {
+      const queue = JSON.parse(localStorage.getItem(K_LOGQ) || "[]");
+      if (!queue.length) break;
+      const body = new URLSearchParams();
+      body.set(LOG.entry, queue[0]);
+      await fetch(LOG.url, {method: "POST", mode: "no-cors", body});
+      const rest = JSON.parse(localStorage.getItem(K_LOGQ) || "[]");
+      rest.shift();
+      localStorage.setItem(K_LOGQ, JSON.stringify(rest));
+    }
+  } catch (e) {} finally { flushing = false; }
+}
+window.addEventListener("online", flushLog);
+function setSync(msg){ $("sync").textContent = msg; }
+
+async function refresh(manual){
+  if (refreshing) return;
+  refreshing = true;
+  if (manual) setSync("확인하는 중…");
+  try {
+    const ver = await remoteVersion();
+    // 화면(앱 자체)이 새로 나왔으면 한 번 다시 불러온다. 열어 둔 채로 쓰던 핸드폰에도 새 기능이 바로 보이도록
+    if (SHELL && ver.shell && ver.shell !== SHELL && sessionStorage.getItem("upche-reload") !== ver.shell) {
+      sessionStorage.setItem("upche-reload", ver.shell);
+      await fetch(location.pathname, {cache: "reload"}).catch(() => {});  // 저장해 둔 예전 화면을 새것으로 바꿔 놓고
+      location.reload();
+      return;
+    }
+    if (ver.v !== localStorage.getItem(K_VER) || !DATA) {
+      const buf = await fetchData(ver.v);
+      let d;
+      try { d = await decrypt(buf, b64dec(localStorage.getItem(K_KEY))); }
+      catch (e) { lock("비밀번호가 바뀌었습니다. 새 비밀번호를 입력해 주세요."); return; }
+      await storeData(buf);
+      localStorage.setItem(K_VER, ver.v);
+      if (DATA && document.body.classList.contains("detail")) pending = d;  // 보고 있던 화면은 그대로 두고 목록으로 돌아올 때 반영
+      else { const had = !!DATA; setData(d); if (had) toast("자료를 최신으로 갱신했습니다"); }
+    } else if (manual) toast("이미 최신 자료입니다");
+    lastCheck = Date.now();
+    setSync("자동 갱신 켜짐 · 방금 확인");
+  } catch (e) {
+    setSync(DATA ? "인터넷에 연결되지 않아 저장된 자료로 표시합니다" : "자료를 받아오지 못했습니다. 인터넷 연결을 확인하세요.");
+  } finally { refreshing = false; }
+}
+
+async function login(password){
+  let buf = await cachedData(), ver = null;
+  try { ver = await remoteVersion(); buf = await fetchData(ver.v); }
+  catch (e) { if (!buf) throw new Error("net"); }
+  const key = await deriveKey(password, new Uint8Array(buf).slice(6, 22));
+  const d = await decrypt(buf, key);  // 비밀번호가 틀리면 여기서 실패
+  localStorage.setItem(K_KEY, b64enc(key));
+  if (ver) localStorage.setItem(K_VER, ver.v);
+  await storeData(buf);
+  document.body.classList.remove("locked");
+  lastCheck = Date.now();
+  setSync("자동 갱신 켜짐 · 방금 확인");
+  setData(d);
+  logEvent("접속", "처음 로그인");
+}
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!$("nm").hidden) {
+    const name = $("nm").value.trim();
+    if (name.length < 2) { $("loginMsg").textContent = "사용자 이름을 입력해 주세요."; return; }
+    localStorage.setItem(K_NAME, name);
+  }
+  if ($("pw").hidden) {  // 비밀번호는 이미 넣은 기기: 이름만 받고 바로 연다
+    document.body.classList.remove("locked");
+    $("loginMsg").textContent = "";
+    boot();
+    return;
+  }
+  const pw = $("pw").value;
+  if (!pw) return;
+  $("loginMsg").textContent = "확인하는 중…";
+  try { await login(pw); $("loginMsg").textContent = ""; }
+  catch (err) {
+    $("loginMsg").textContent = err.message === "net"
+      ? "자료를 받아오지 못했습니다. 인터넷 연결을 확인하세요." : "비밀번호가 맞지 않습니다.";
+  }
+});
+$("reload").addEventListener("click", () => refresh(true));
+$("lock").addEventListener("click", () => lock(""));
+$("install").addEventListener("click", () => { if (installEvent) { installEvent.prompt(); installEvent = null; $("install").hidden = true; } });
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvent = e; $("install").hidden = false; });
+document.addEventListener("visibilitychange", () => {
+  if (!EMBED && !document.hidden && localStorage.getItem(K_KEY) && Date.now() - lastCheck > 5 * 60000) refresh();
+});
+
+// 앱 화면 자체가 새로 나왔으면 한 번 다시 불러온다 (서버의 것을 저장본 없이 직접 받아 본다)
+async function checkShell(){
+  try {
+    const ver = await remoteVersion();
+    if (SHELL && ver.shell && ver.shell !== SHELL && sessionStorage.getItem("upche-reload") !== ver.shell) {
+      sessionStorage.setItem("upche-reload", ver.shell);
+      await fetch(location.pathname, {cache: "reload"}).catch(() => {});  // 저장해 둔 예전 화면을 새것으로 바꿔 놓고
+      location.reload();
+    }
+  } catch (e) {}
+}
+
+async function boot(){
+  if (EMBED) { setData(EMBED); route(); return; }
+  $("tools").hidden = false;
+  if (!window.crypto || !crypto.subtle) {
+    document.body.classList.add("locked");
+    $("loginMsg").textContent = "이 주소로는 열 수 없습니다. https 로 시작하는 주소로 접속해 주세요.";
+    return;
+  }
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) $("iosTip").hidden = false;
+  const k = localStorage.getItem(K_KEY);
+  if (!k || (LOG && !localStorage.getItem(K_NAME))) {
+    lock("", true);
+    checkShell();  // 비밀번호·이름을 묻는 화면에서도 새 화면이 나왔는지 본다
+    return;
+  }
+  const buf = await cachedData();
+  if (buf) { try { setData(await decrypt(buf, b64dec(k))); } catch (e) {} }
+  logEvent("접속");
+  flushLog();
+  refresh();
+}
+boot();
+</script>
+</body>
+</html>
